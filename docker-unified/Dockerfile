@@ -5,17 +5,19 @@
 FROM --platform=$BUILDPLATFORM debian AS web-setup
 
 # Add packages
-RUN apt-get update && apt-get install -y \
-    curl \
-    jq \
-    unzip \
-    git \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        jq \
+        unzip \
+        git \
+        2>&1 | grep -v "debconf: delaying package configuration, since apt-utils is not installed" \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
 
 # Grab last tag/release of the 'web' client
-RUN git ls-remote --tags https://github.com/bitwarden/clients.git | grep refs/tags/web | cut -d/ -f3 | sort -Vr | head -1 > tag.txt
+RUN git ls-remote --tags https://github.com/SoulSeekkor/bitwarden-self-host.git | grep refs/tags/web | cut -d/ -f3 | sort -Vr | head -1 > tag.txt
 
 RUN cat tag.txt
 
@@ -24,20 +26,19 @@ RUN cat tag.txt | grep -o -E "[0-9]{4}\.[0-9]{1,2}\.[0-9]+" > version.txt
 
 # Download the built release artifact for the 'web' client
 RUN TAG=$(cat tag.txt) \
-  && VERSION=$(cat version.txt) \
-  && curl -L https://github.com/bitwarden/clients/releases/download/$TAG/web-$VERSION-selfhosted-COMMERCIAL.zip -O
+    && VERSION=$(cat version.txt) \
+    && curl -L https://github.com/SoulSeekkor/bitwarden-self-host/releases/download/$TAG/web-$VERSION.zip -O
 
 # Unzip the 'web' client to /tmp/build
 RUN VERSION=$(cat version.txt) \
-  && unzip web-$VERSION-selfhosted-COMMERCIAL.zip
+    && unzip web-$VERSION.zip
 
 ###############################################
 #                 Build stage                 #
 ###############################################
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS dotnet-build
 
-# Docker buildx supplies the value for this arg
-ARG TARGETPLATFORM
+RUN TARGETPLATFORM="linux/amd64"
 
 # Determine proper runtime value for .NET
 # We put the value in a file to be read by later layers.
@@ -51,8 +52,10 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
     && echo "RID=$RID" > /tmp/rid.txt
 
 # Add packages
-RUN apt-get update && apt-get install -y \
-    npm \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        npm \
+        2>&1 | grep -v "debconf: delaying package configuration, since apt-utils is not installed" \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy csproj files as distinct layers
@@ -173,22 +176,21 @@ RUN . /tmp/rid.txt && dotnet publish -c release -o /app/Scim --no-restore --no-s
 ###############################################
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 ARG TARGETPLATFORM
-LABEL com.bitwarden.product="bitwarden"
-LABEL com.bitwarden.project="unified"
+LABEL com.soulseekkor.product="bitwarden"
+LABEL com.soulseekkor.project="unified"
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV BW_ENABLE_ADMIN=true
 ENV BW_ENABLE_API=true
-ENV BW_ENABLE_EVENTS=false
+ENV BW_ENABLE_EVENTS=true
 ENV BW_ENABLE_ICONS=true
 ENV BW_ENABLE_IDENTITY=true
 ENV BW_ENABLE_NOTIFICATIONS=true
-ENV BW_ENABLE_SCIM=false
-ENV BW_ENABLE_SSO=false
+ENV BW_ENABLE_SCIM=true
+ENV BW_ENABLE_SSO=true
 ENV BW_DB_FILE="/etc/bitwarden/vault.db"
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 ENV globalSettings__selfHosted="true"
 ENV globalSettings__unifiedDeployment="true"
-ENV globalSettings__pushRelayBaseUri="https://push.bitwarden.com"
 ENV globalSettings__baseServiceUri__internalAdmin="http://localhost:5000"
 ENV globalSettings__baseServiceUri__internalApi="http://localhost:5001"
 ENV globalSettings__baseServiceUri__internalEvents="http://localhost:5003"
@@ -207,14 +209,16 @@ ENV globalSettings__logDirectoryByProject="false"
 ENV globalSettings__logRollBySizeLimit="1073741824"
 
 # Add packages
-RUN apt-get update && apt-get install -y \
-    curl \
-    jq \
-    nginx \
-    openssl \
-    supervisor \
-    tzdata \
-    unzip \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        jq \
+        nginx \
+        openssl \
+        supervisor \
+        tzdata \
+        unzip \
+        2>&1 | grep -v "debconf: delaying package configuration, since apt-utils is not installed" \
     && rm -rf /var/lib/apt/lists/*
 
 # Create required directories
