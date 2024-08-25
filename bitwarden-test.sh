@@ -7,6 +7,12 @@ cat << "EOF"
 / __|/ _ \| | | | |// __| | '_ \| | __\ \ /\ / / _` | '__/ _` |/ _ \ '_ \
 \__ \ (_) | |_| | | \__ \ | |_) | | |_ \ V  V / (_| | | | (_| |  __/ | | |
 |___/\___/ \__,_|_| |___/ |_.__/|_|\__| \_/\_/ \__,_|_|  \__,_|\___|_| |_|
+                          __                   __
+                        _/  |_  ____   _______/  |_
+                        \   __\/ __ \ /  ___/\   __\
+                         |  | \  ___/ \___ \  |  |
+                         |__|  \___  >____  > |__|
+                                   \/     \/
 
 EOF
 
@@ -37,13 +43,13 @@ else
 fi
 
 SCRIPTS_DIR="$OUTPUT/scripts"
-BITWARDEN_SCRIPT_URL="https://raw.githubusercontent.com/SoulSeekkor/bitwarden-self-host/main/bitwarden.sh"
-RUN_SCRIPT_URL="https://raw.githubusercontent.com/SoulSeekkor/bitwarden-self-host/main/run.sh"
+BITWARDEN_SCRIPT_URL="https://raw.githubusercontent.com/SoulSeekkor/bitwarden-scripts/master/bitwarden-test.sh"
+RUN_SCRIPT_URL="https://raw.githubusercontent.com/SoulSeekkor/bitwarden-scripts/master/run.sh"
 
 # Please do not create pull requests modifying the version numbers.
-COREVERSION="2024.7.4"
-WEBVERSION="2024.7.3"
-KEYCONNECTORVERSION="2024.4.0"
+COREVERSION="test"
+WEBVERSION="test"
+KEYCONNECTORVERSION="test"
 
 echo "bitwarden.sh version $COREVERSION"
 docker --version
